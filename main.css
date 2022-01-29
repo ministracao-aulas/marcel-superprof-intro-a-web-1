@@ -1,0 +1,14 @@
+        body.dark{
+            background-color: black;
+            color: white;
+        }
+        body.light{
+            background-color: white;
+            color: black;
+        }
+
+        .container {
+            width: 80%;
+            margin: 1rem auto;
+        }
+    
