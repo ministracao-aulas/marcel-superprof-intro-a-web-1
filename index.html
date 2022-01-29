@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body.dark{
+            background-color: black;
+            color: white;
+        }
+        body.light{
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <h3>Current theme: <span class="current-theme"></span></h3>
+
+    <ul>
+        <li>
+            <button data-theme="dark">Tema: dark</button>
+        </li>
+        <li>
+            <button data-theme="light">Tema: light</button>
+        </li>
+    </ul>
+</div>
+
+<script>
+    const valid_themes = [
+        "dark",
+        "light",
+    ];
+
+    function isValidTheme(theme)
+    {
+        return valid_themes.indexOf(theme) !== -1;
+    }
+
+    function getCurrentPreferences()
+    {
+        var default_theme   = "dark";
+        var default_lang    = "pt-BR";
+
+        var default_preferences = {
+            theme: default_theme,
+            lang: default_lang,
+        };
+
+        var preferences     = localStorage.preferences ? JSON.parse(localStorage.preferences) : default_preferences;
+        return preferences;
+    }
+
+    function getCurrentTheme()
+    {
+        var preferences     = getCurrentPreferences();
+        var default_theme   = "dark";
+
+        var theme = preferences.theme && isValidTheme(preferences.theme) ? preferences.theme : default_theme;
+
+        var show_current_theme = document.querySelector('.current-theme')
+
+        if(show_current_theme)
+        {
+            show_current_theme.innerText = theme;
+        }
+
+        document.body.classList.remove(theme === 'dark' ? 'light' : 'dark');
+        document.body.classList.add(theme === 'dark' ? 'dark' : 'light');
+    }
+
+    function setTheme(theme)
+    {
+        var preferences     = getCurrentPreferences();
+        preferences.theme   = theme;
+
+        localStorage.preferences = JSON.stringify(preferences);
+        getCurrentTheme();
+    }
+
+    document.querySelectorAll('button[data-theme]').forEach(el => {
+        el.addEventListener('click', event => {
+            setTheme(event.target.dataset.theme);
+        })
+    })
+
+    document.addEventListener('DOMContentLoaded', function() {
+        getCurrentTheme();
+    });
+</script>
+</body>
+</html>
