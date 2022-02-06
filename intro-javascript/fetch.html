@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
+    <style>
+        [data-container="comments"]{
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script>
+        window.top_menu = `
+            <div>
+                <a href="#list/posts" onclick="listAllPosts()">Posts</a>
+            </div>
+        `
+
+        const ROUTES = [
+            {
+                route: "#list/posts",
+                call() {
+                    listAllPosts();
+                }
+            },
+            {
+                route: "#show/post/",
+                call() {
+                    getPostIdByRoute();
+                }
+            }
+        ];
+
+        function isNumeric(num)
+        {
+            return !isNaN(num)
+        }
+
+        function getPostIdByRoute()
+        {
+            let route = getRoute();
+
+            if(route && (typeof route === 'string') && (route.length >= 1))
+            {
+                let route_itens = route.split("/");
+                let postId = route_itens[route_itens.length -1];
+                postId = isNumeric(postId) && postId >= 1 ? postId : null;
+
+                if(!postId)
+                {
+                    basicPage('Invalid data', 'The param is invalid.');
+                    return;
+                }
+
+                console.log('PostId', postId);
+                loadPost(postId);
+                return;
+            }
+
+            notFoundPage();
+        }
+
+        function clearRoot()
+        {
+            let root_element = document.querySelector('#root');
+            root_element.innerHTML = ''
+        }
+
+        function getRoute()
+        {
+            return window.location.hash;
+        }
+
+        function loadComments(postId)
+        {
+            console.log(`Carregando comentários do post ${postId}`);
+
+            fetch(`https://jsonplaceholder.typicode.com/posts/${postId}/comments`)
+            .then( response => response.json())
+            .then(comments => {
+                let data_container = document.querySelector('[data-container="comments"]');
+                let comment_list = document.createElement('ul');
+
+                comments.forEach(comment => {
+                    let body = comment.body.replaceAll('\n', '<br>');
+                    let list_item = document.createElement('li');
+                    list_item.innerHTML = `
+                    <li>
+                        <hr>
+                        <div>
+                            [${comment.name} (${comment.email}) ]
+                        </div>
+                        <div>
+                            ${body}
+                        </div>
+                        <br>
+                    </li>
+                    `
+                    comment_list.appendChild(list_item)
+                })
+                data_container.innerHTML = '';
+                data_container.appendChild(comment_list);
+            })
+            .catch(error => {
+                console.log('Error: ', error)
+            })
+        }
+
+        function loadPost(postId)
+        {
+            console.log(`Carregando post ${postId}`);
+            let root_element = document.querySelector('#root');
+
+            fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+            .then( response => response.json())
+            .then(post => {
+                let data_container = document.createElement('div');
+                let body = post.body.replaceAll('\n', '<br>');
+
+                data_container.innerHTML = `
+                    ${window.top_menu}
+                    <div>
+                        <h4>${post.id} - ${post.title}</h4>
+                        <p>${body}</p>
+                    </div>
+                    <div>
+                        <h5>Comments</h5>
+                        <ul data-container="comments"></ul>
+                    </div>
+                `
+                clearRoot();
+                root_element.appendChild(data_container);
+                loadComments(postId);
+            })
+            .catch(error => {
+                console.log('Error: ', error)
+            })
+        }
+
+        function listAllPosts()
+        {
+            let root_element = document.querySelector('#root');
+
+            fetch('https://jsonplaceholder.typicode.com/posts')
+            .then( response => response.json())
+            .then(data => {
+                let list = document.createElement('ul');
+
+                data.forEach((post, index) => {
+                    let list_item = document.createElement('li');
+                    list_item.innerHTML = `
+                        <a href="#show/post/${post.id}" onclick="loadPost(${post.id})">${post.id} - ${post.title}</a>
+                    `
+                    list.appendChild(list_item)
+                })
+
+                clearRoot();
+                root_element.appendChild(list);
+            })
+            .catch(error => {
+                console.log('Error: ', error)
+            })
+        }
+
+        function notFoundPage(message = '')
+        {
+            let root_element = document.querySelector('#root');
+                    root_element.innerHTML = `
+                    ${window.top_menu}
+                    <div>
+                        <h1>404 | Not found!</h1>
+                    </div>
+                    <div>
+                        ${message}
+                    </div>
+                    `
+                    console.log('NOT found action');
+        }
+
+        function basicPage(title = '', content = '')
+        {
+            let root_element = document.querySelector('#root');
+                    root_element.innerHTML = `
+                    ${window.top_menu}
+                    <div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div>
+                        <h4>${content}</h4>
+                    </div>
+                    `
+                    console.log('basicPage action');
+        }
+
+        function loadApp()
+        {
+            let route = getRoute();
+
+            if(route)
+            {
+                var action = ROUTES.find(item => {
+                    return route.startsWith(item.route)
+                })
+
+                if(action)
+                {
+                    console.log('action: ', action);
+                    action.call();
+                }else{
+                    notFoundPage();
+                }
+            }else{
+                listAllPosts();
+            }
+        }
+
+        loadApp();
+
+    </script>
+</body>
+
+</html>
