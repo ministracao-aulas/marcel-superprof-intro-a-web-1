@@ -223,6 +223,10 @@
 
         loadApp();
 
+        window.addEventListener('hashchange', function() {
+            loadApp();
+        })
+
     </script>
 </body>
 
